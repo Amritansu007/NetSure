@@ -1,0 +1,36 @@
+R_DEF: Internal format may change without notice
+local
+color background_light
+color black
+color purple_200
+color purple_500
+color purple_700
+color status_checking
+color status_stable
+color status_unstable
+color teal_200
+color teal_700
+color white
+drawable shape_circle_status
+id btnPayFallback
+id btnPayQr
+id btnPayStandard
+id containerFallback
+id containerStandard
+id tvStatusHeader
+id viewStatusIndicator
+layout activity_main
+string app_name
+string btn_pay_fallback
+string btn_pay_qr
+string btn_pay_standard
+string desc_fallback
+string desc_standard
+string status_checking
+string status_stable
+string status_unstable
+string title_fallback
+string title_standard
+style Theme.AdaptivePayment
+xml backup_rules
+xml data_extraction_rules

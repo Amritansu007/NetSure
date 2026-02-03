@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="http://schemas.android.com/tools">
+    <color name="background_light">#F5F5F5</color>
+    <color name="black">#FF000000</color>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="status_checking">#FFC107</color>
+    <color name="status_stable">#4CAF50</color>
+    <color name="status_unstable">#F44336</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="white">#FFFFFFFF</color>
+    <string name="app_name">Adaptive Payment</string>
+    <string name="btn_pay_fallback">Pay via SMS/USSD</string>
+    <string name="btn_pay_qr">Generate Offline QR</string>
+    <string name="btn_pay_standard">Pay Now (Online)</string>
+    <string name="desc_fallback">Connection is poor. Switching to lightweight offline-first mode to ensure transaction success.</string>
+    <string name="desc_standard">High-speed connection detected. You can pay using the standard secure gateway.</string>
+    <string name="status_checking">Checking network stability...</string>
+    <string name="status_stable">Network Stable</string>
+    <string name="status_unstable">Network Unstable / Unreliable</string>
+    <string name="title_fallback">Offline / Lite Mode</string>
+    <string name="title_standard">Standard Online Payment</string>
+    <style name="Theme.AdaptivePayment" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    
+    <item name="colorPrimary">@color/purple_500</item>
+    <item name="colorPrimaryVariant">@color/purple_700</item>
+    <item name="colorOnPrimary">@color/white</item>
+    
+    <item name="colorSecondary">@color/teal_200</item>
+    <item name="colorSecondaryVariant">@color/teal_700</item>
+    <item name="colorOnSecondary">@color/black</item>
+    
+    <item name="android:statusBarColor" ns1:targetApi="l">?attr/colorPrimaryVariant</item>
+    
+  </style>
+</resources>

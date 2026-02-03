@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Adaptive Payment</string>
+    <string name="status_checking">Checking network stability...</string>
+    <string name="status_stable">Network Stable</string>
+    <string name="status_unstable">Network Unstable / Unreliable</string>
+    
+    <!-- Standard Flow -->
+    <string name="title_standard">Standard Online Payment</string>
+    <string name="desc_standard">High-speed connection detected. You can pay using the standard secure gateway.</string>
+    <string name="btn_pay_standard">Pay Now (Online)</string>
+    
+    <!-- Fallback Flow -->
+    <string name="title_fallback">Offline / Lite Mode</string>
+    <string name="desc_fallback">Connection is poor. Switching to lightweight offline-first mode to ensure transaction success.</string>
+    <string name="btn_pay_fallback">Pay via SMS/USSD</string>
+    <string name="btn_pay_qr">Generate Offline QR</string>
+</resources>
