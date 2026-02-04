@@ -16,6 +16,7 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import com.example.adaptivepayment.ussd.UssdHelper
 import com.example.adaptivepayment.util.extractUpiIdFromQr
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
@@ -100,6 +101,8 @@ class MainActivity : AppCompatActivity() {
         copyToClipboard(upiId)
         runOnUiThread {
             Toast.makeText(this, "UPI ID copied: $upiId", Toast.LENGTH_LONG).show()
+            // USSD helper: show dialog to open *99# and guide user to paste UPI ID when prompted
+            UssdHelper.promptAndStartUssd(this, upiId, amount = null)
         }
     }
 
@@ -111,6 +114,24 @@ class MainActivity : AppCompatActivity() {
     private fun showPermissionDenied() {
         Toast.makeText(this, R.string.permission_denied, Toast.LENGTH_LONG).show()
         finish()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == UssdHelper.REQUEST_CALL_PHONE) {
+            UssdHelper.handlePermissionResult(this, requestCode, permissions, grantResults)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Cancel USSD flow notification when user returns to app
+        UssdHelper.cancelNotification(this)
+        // TODO: Integrate with NetworkMonitor or SMS receiver — checkPaymentStatus() to confirm payment
     }
 
     override fun onDestroy() {

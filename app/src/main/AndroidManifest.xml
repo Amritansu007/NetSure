@@ -5,7 +5,13 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Required for USSD *99# via ACTION_CALL; if denied, app falls back to ACTION_DIAL -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <!-- Optional: only if you add SMS confirmation parsing later -->
+    <!-- <uses-permission android:name="android.permission.RECEIVE_SMS" /> -->
+
     <uses-feature android:name="android.hardware.camera" android:required="true" />
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
 
     <application
         android:name=".AdaptiveApp"
