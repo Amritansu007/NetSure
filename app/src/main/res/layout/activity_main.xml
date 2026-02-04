@@ -1,134 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout 
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp"
-    android:background="@color/background_light">
+    android:background="@color/black"
+    tools:context=".MainActivity">
 
-    <!-- Status Header -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <TextView
-        android:id="@+id/tvStatusHeader"
+        android:id="@+id/tvHint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/status_checking"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@color/black"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="48dp"
+        android:background="#99000000"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
+        android:text="@string/upi_scan_hint"
+        android:textColor="@color/white"
+        android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="32dp"/>
-
-    <View
-        android:id="@+id/viewStatusIndicator"
-        android:layout_width="12dp"
-        android:layout_height="12dp"
-        android:background="@drawable/shape_circle_status"
-        android:backgroundTint="@color/status_checking"
-        app:layout_constraintEnd_toStartOf="@id/tvStatusHeader"
-        app:layout_constraintTop_toTopOf="@id/tvStatusHeader"
-        app:layout_constraintBottom_toBottomOf="@id/tvStatusHeader"
-        android:layout_marginEnd="8dp"/>
-
-    <!-- Standard Flow Container -->
-    <LinearLayout
-        android:id="@+id/containerStandard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/tvStatusHeader"
-        app:layout_constraintBottom_toBottomOf="parent"
-        tools:visibility="visible">
-
-        <ImageView
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:src="@android:drawable/ic_secure"
-            android:layout_gravity="center"
-            android:layout_marginBottom="24dp"
-            app:tint="@color/purple_500"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/title_standard"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/black"
-            android:layout_gravity="center"
-            android:layout_marginBottom="8dp"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/desc_standard"
-            android:textSize="16sp"
-            android:gravity="center"
-            android:layout_marginBottom="32dp"/>
-
-        <Button
-            android:id="@+id/btnPayStandard"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="@string/btn_pay_standard"
-            android:backgroundTint="@color/purple_500"/>
-    </LinearLayout>
-
-    <!-- Fallback Flow Container -->
-    <LinearLayout
-        android:id="@+id/containerFallback"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/tvStatusHeader"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <ImageView
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:src="@android:drawable/ic_dialog_alert"
-            android:layout_gravity="center"
-            android:layout_marginBottom="24dp"
-            app:tint="@color/status_unstable"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/title_fallback"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/black"
-            android:layout_gravity="center"
-            android:layout_marginBottom="8dp"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/desc_fallback"
-            android:textSize="16sp"
-            android:gravity="center"
-            android:layout_marginBottom="32dp"/>
-
-        <Button
-            android:id="@+id/btnPayFallback"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="@string/btn_pay_fallback"
-            android:backgroundTint="@color/black"
-            android:layout_marginBottom="16dp"/>
-
-        <Button
-            android:id="@+id/btnPayQr"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="@string/btn_pay_qr"
-            android:backgroundTint="@color/teal_700"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-    </LinearLayout>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

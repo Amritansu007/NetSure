@@ -1,96 +1,160 @@
 package com.example.adaptivepayment
 
-import android.content.res.ColorStateList
+import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
-import android.view.View
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
-import com.example.adaptivepayment.logic.DecisionEngine
-import com.example.adaptivepayment.network.NetworkMonitor
-import com.example.adaptivepayment.network.NetworkStatus
-import kotlinx.coroutines.launch
+import com.example.adaptivepayment.util.extractUpiIdFromQr
+import com.google.mlkit.vision.barcode.BarcodeScanner
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.common.InputImage
+import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var statusHeader: TextView
-    private lateinit var statusIndicator: View
-    private lateinit var containerStandard: LinearLayout
-    private lateinit var containerFallback: LinearLayout
+    private lateinit var previewView: androidx.camera.view.PreviewView
 
-    private lateinit var networkMonitor: NetworkMonitor
-    private val decisionEngine = DecisionEngine()
+    private val cameraExecutor = Executors.newSingleThreadExecutor()
+    private var barcodeScanner: BarcodeScanner? = null
+    private var scanningStopped = false
+
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) startCamera() else showPermissionDenied()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        previewView = findViewById(R.id.previewView)
+        initBarcodeScanner()
+        checkCameraPermission()
+    }
 
-        // Initialize Views
-        statusHeader = findViewById(R.id.tvStatusHeader)
-        statusIndicator = findViewById(R.id.viewStatusIndicator)
-        containerStandard = findViewById(R.id.containerStandard)
-        containerFallback = findViewById(R.id.containerFallback)
+    private fun initBarcodeScanner() {
+        val options = BarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+            .build()
+        barcodeScanner = BarcodeScanning.getClient(options)
+    }
 
-        // Initialize Logic
-        networkMonitor = NetworkMonitor(this)
-
-        // Start Assessment
-        assessConnection()
-        
-        // Setup Button Listeners
-        findViewById<Button>(R.id.btnPayStandard).setOnClickListener {
-            Toast.makeText(this, "Processing Secure Online Payment...", Toast.LENGTH_SHORT).show()
-        }
-        
-        findViewById<Button>(R.id.btnPayFallback).setOnClickListener {
-            Toast.makeText(this, "Initiating Offline Payment (SMS/USSD)...", Toast.LENGTH_SHORT).show()
-        }
-
-        findViewById<Button>(R.id.btnPayQr).setOnClickListener {
-            Toast.makeText(this, "Generating Offline QR Code...", Toast.LENGTH_SHORT).show()
+    private fun checkCameraPermission() {
+        when {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED ->
+                startCamera()
+            else -> permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
-    private fun assessConnection() {
-        // UI: Checking State
-        updateStatusUI(NetworkStatus.Checking)
+    private fun startCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            val cameraProvider = cameraProviderFuture.get()
+            bindPreviewAndAnalysis(cameraProvider)
+        }, ContextCompat.getMainExecutor(this))
+    }
 
-        lifecycleScope.launch {
-            // Logic: Perform Network Test
-            val metrics = networkMonitor.assessNetwork()
-            
-            // Logic: Decide
-            val decision = decisionEngine.evaluate(metrics)
+    private fun bindPreviewAndAnalysis(cameraProvider: ProcessCameraProvider) {
+        val preview = Preview.Builder().build().also {
+            it.setSurfaceProvider(previewView.surfaceProvider)
+        }
 
-            // UI: Update based on decision
-            updateStatusUI(decision)
+        val imageAnalysis = ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            .also {
+                it.setAnalyzer(cameraExecutor, UpiQrAnalyzer(
+                    barcodeScanner = requireNotNull(barcodeScanner),
+                    onUpiIdFound = { upiId -> onUpiIdDetected(upiId) },
+                    isScanningStopped = { scanningStopped }
+                ))
+            }
+
+        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+        try {
+            cameraProvider.unbindAll()
+            cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Camera error: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun updateStatusUI(status: NetworkStatus) {
-        when (status) {
-            is NetworkStatus.Checking -> {
-                statusHeader.text = getString(R.string.status_checking)
-                statusIndicator.backgroundTintList = ColorStateList.valueOf(getColor(R.color.status_checking))
-                containerStandard.visibility = View.GONE
-                containerFallback.visibility = View.GONE
-            }
-            is NetworkStatus.Stable -> {
-                statusHeader.text = getString(R.string.status_stable)
-                statusIndicator.backgroundTintList = ColorStateList.valueOf(getColor(R.color.status_stable))
-                containerStandard.visibility = View.VISIBLE
-                containerFallback.visibility = View.GONE
-            }
-            is NetworkStatus.Unstable -> {
-                statusHeader.text = getString(R.string.status_unstable)
-                statusIndicator.backgroundTintList = ColorStateList.valueOf(getColor(R.color.status_unstable))
-                containerStandard.visibility = View.GONE
-                containerFallback.visibility = View.VISIBLE
-            }
+    private fun onUpiIdDetected(upiId: String) {
+        if (scanningStopped) return
+        scanningStopped = true
+        copyToClipboard(upiId)
+        runOnUiThread {
+            Toast.makeText(this, "UPI ID copied: $upiId", Toast.LENGTH_LONG).show()
         }
+    }
+
+    private fun copyToClipboard(text: String) {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("UPI ID", text))
+    }
+
+    private fun showPermissionDenied() {
+        Toast.makeText(this, R.string.permission_denied, Toast.LENGTH_LONG).show()
+        finish()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        cameraExecutor.shutdown()
+        barcodeScanner?.close()
+    }
+}
+
+/**
+ * CameraX ImageAnalysis.Analyzer that runs ML Kit barcode detection and extracts UPI ID from QR content.
+ */
+private class UpiQrAnalyzer(
+    private val barcodeScanner: BarcodeScanner,
+    private val onUpiIdFound: (String) -> Unit,
+    private val isScanningStopped: () -> Boolean
+) : ImageAnalysis.Analyzer {
+
+    @ExperimentalGetImage
+    override fun analyze(imageProxy: ImageProxy) {
+        if (isScanningStopped()) {
+            imageProxy.close()
+            return
+        }
+        val mediaImage = imageProxy.image ?: run {
+            imageProxy.close()
+            return
+        }
+        val inputImage = InputImage.fromMediaImage(
+            mediaImage,
+            imageProxy.imageInfo.rotationDegrees
+        )
+        barcodeScanner.process(inputImage)
+            .addOnSuccessListener { barcodes ->
+                if (isScanningStopped()) return@addOnSuccessListener
+                for (barcode in barcodes) {
+                    barcode.rawValue?.let { raw ->
+                        extractUpiIdFromQr(raw)?.let { upiId ->
+                            onUpiIdFound(upiId)
+                            return@addOnSuccessListener
+                        }
+                    }
+                }
+            }
+            .addOnCompleteListener { imageProxy.close() }
     }
 }

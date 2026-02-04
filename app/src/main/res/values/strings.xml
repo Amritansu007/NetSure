@@ -1,5 +1,8 @@
 <resources>
-    <string name="app_name">Adaptive Payment</string>
+    <string name="app_name">UPI QR Scanner</string>
+    <string name="upi_scan_hint">Point camera at UPI payment QR code</string>
+    <string name="permission_camera_rationale">Camera is required to scan UPI QR codes.</string>
+    <string name="permission_denied">Camera permission is required to scan QR codes.</string>
     <string name="status_checking">Checking network stability...</string>
     <string name="status_stable">Network Stable</string>
     <string name="status_unstable">Network Unstable / Unreliable</string>
