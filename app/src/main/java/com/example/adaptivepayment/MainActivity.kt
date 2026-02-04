@@ -28,7 +28,7 @@ import java.util.concurrent.Executors
 class MainActivity : AppCompatActivity() {
 
     private lateinit var previewView: androidx.camera.view.PreviewView
-
+    private var cameraProvider: ProcessCameraProvider? = null
     private val cameraExecutor = Executors.newSingleThreadExecutor()
     private var barcodeScanner: BarcodeScanner? = null
     private var scanningStopped = false
@@ -65,9 +65,16 @@ class MainActivity : AppCompatActivity() {
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
-            bindPreviewAndAnalysis(cameraProvider)
+            cameraProvider = cameraProviderFuture.get()
+            bindPreviewAndAnalysis(cameraProvider!!)
         }, ContextCompat.getMainExecutor(this))
+    }
+
+    private fun stopCameraPreview(){
+        cameraProvider?.unbindAll()
+        runOnUiThread {
+            previewView.visibility = android.view.View.INVISIBLE
+        }
     }
 
     private fun bindPreviewAndAnalysis(cameraProvider: ProcessCameraProvider) {
@@ -98,6 +105,7 @@ class MainActivity : AppCompatActivity() {
     private fun onUpiIdDetected(upiId: String) {
         if (scanningStopped) return
         scanningStopped = true
+        stopCameraPreview()
         copyToClipboard(upiId)
         runOnUiThread {
             Toast.makeText(this, "UPI ID copied: $upiId", Toast.LENGTH_LONG).show()
