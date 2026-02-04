@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var previewView: androidx.camera.view.PreviewView
 
+    private var cameraProvider: ProcessCameraProvider? = null
     private val cameraExecutor = Executors.newSingleThreadExecutor()
     private var barcodeScanner: BarcodeScanner? = null
     private var scanningStopped = false
@@ -70,6 +71,14 @@ class MainActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
+
+    private fun stopCameraPreview() {
+        cameraProvider?.unbindAll()          // stops camera + analysis use cases
+        runOnUiThread {
+            previewView.visibility = android.view.View.INVISIBLE // or GONE
+        }
+    }
+
     private fun bindPreviewAndAnalysis(cameraProvider: ProcessCameraProvider) {
         val preview = Preview.Builder().build().also {
             it.setSurfaceProvider(previewView.surfaceProvider)
@@ -98,6 +107,7 @@ class MainActivity : AppCompatActivity() {
     private fun onUpiIdDetected(upiId: String) {
         if (scanningStopped) return
         scanningStopped = true
+        stopCameraPreview()
         copyToClipboard(upiId)
         runOnUiThread {
             Toast.makeText(this, "UPI ID copied: $upiId", Toast.LENGTH_LONG).show()
@@ -165,11 +175,13 @@ private class UpiQrAnalyzer(
             imageProxy.imageInfo.rotationDegrees
         )
         barcodeScanner.process(inputImage)
-            .addOnSuccessListener { barcodes ->
+            .addOnSuccessListener { barcodes: List<Barcode> ->
                 if (isScanningStopped()) return@addOnSuccessListener
                 for (barcode in barcodes) {
-                    barcode.rawValue?.let { raw ->
-                        extractUpiIdFromQr(raw)?.let { upiId ->
+                    val rawValue = barcode.rawValue
+                    if (rawValue != null) {
+                        val upiId = extractUpiIdFromQr(rawValue)
+                        if (upiId != null) {
                             onUpiIdFound(upiId)
                             return@addOnSuccessListener
                         }
